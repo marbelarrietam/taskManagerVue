@@ -2,16 +2,10 @@
   <div id="app">
   <nav class="navbar navbar-dark bg-dark">
   <a class="navbar-brand" href="#">TaskManager</a>
-  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
-  <div class="collapse navbar-collapse" id="navbarNav">
+  <div class="navbar" id="navbarNav">
     <ul class="navbar-nav">
-      <li class="nav-item active">
-        <a class="nav-link" href="#">Home</a>
-      </li>
       <li class="nav-item">
-        <a class="nav-link" href="#">Authors</a>
+        <router-link to="authors" class="nav-link">Authors</router-link>
       </li>
     </ul>
   </div>
@@ -26,8 +20,11 @@
   <tasks
               v-for="item in items"
               :key="item._id"
+              :taskId="item._id"
               :description="item.description"
-              :author="item.author"></tasks>
+              :author="item.author"
+              @delet="delet"
+              @edit="edit"></tasks>
   </div>
   </div>
      <div class="col-sm">
@@ -68,10 +65,12 @@ export default {
           console.log(item);
           const { firstname = '', lastname = '' } = userId;
           return {
+            taskId: item._id,
             description: item.description,
             author: `${item.author.firstname} ${item.author.lastname}`,
             status: item.status
           }
+          console.log(item._id)
         });
         this.items = tasks;
         this.loading = false;
@@ -95,7 +94,33 @@ export default {
           console.log(data);
           this.items.push(data);
         });
-    }
+    },
+       edit(tasks) {
+      this.taskUpdate = {
+        taskId: tasks.taskId,
+        authorId: tasks.authorId,
+        description: tasks.description,
+        finished: tasks.finished,
+        createdAt: tasks.createdAt
+      };
+    },
+    delet(tasks) {
+      console.log("entra")
+      fetch("http://localhost:3000/api/tasks/" + tasks.taskId, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+        .then(response => {
+          return response.json();
+        })
+        .then(data => {
+          var index = this.items.indexOf(data);
+          alert("Task deleted");
+          this.load();
+        });
+  }
   }
 }
 </script>

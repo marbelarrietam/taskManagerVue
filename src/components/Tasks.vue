@@ -4,12 +4,12 @@
       <div class="card-body">
         <h5 class="card-title">Task</h5>
         <p class="card-text"></p>
+        <p><span>Task: </span>{{taskId}}</p>
         <p><span>Task: </span>{{description}}</p>
         <p><span>Author: </span>{{author}}</p>
-        <p>{{status}}</p>
-    <button type="button" class="btn btn-success" @click="save" >Complete task</button>
-    <button type="button" class="btn btn-success" @click="save" >Update</button>
-    <button type="button" class="btn btn btn-danger" @click="save" >Delete</button>
+    <button type="button" class="btn btn-success" @click="complete" >Complete task</button>
+    <button type="button" class="btn btn-success" @click="edit" >Update</button>
+    <button type="button" class="btn btn btn-danger" @click="delet" >Delete</button>
     
     <div v-if="status" class="progress">
   <div class="progress-bar bg-success" role="progressbar" style="width: 100%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
@@ -24,19 +24,49 @@
 export default {
   name: 'tasks',
   props: {
+    taskId: {
+      type: String,
+      required: true
+    },
     description: {
       type: String,
-      default: '',
     },
     author: {
       type: String,
       required: true
     },
-    status:{
+    status: {
       type: Boolean
-    }
+    },
+    createdAt: {
+      type: String,
+    },
   },
-};
+  methods: {
+    edit() {
+      this.$emit("edit", {
+        taskId: this.taskId,
+        description: this.description,
+        author: this.author,
+        status: this.status,
+        createdAt: this.createdAt
+      });
+    },
+    delet() {
+      this.$emit("delet", {
+        taskId: this.taskId
+      });
+    },
+    complete(){
+        his.$emit("complete", {
+        taskId: this.taskId,
+        description: this.description,
+        author: this.author,
+        status: true
+    });
+    }
+}
+}
 </script>
 
 <style>
