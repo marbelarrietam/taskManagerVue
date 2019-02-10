@@ -41,9 +41,31 @@ export default {
         })
         .then((data) => {
           console.log(data);
+          alert("user created");
+          this.firstname='';
+          this.lastname='';
+          this.email='';
           this.items.push(data);
+                    
         });
     }
   }
 }
 </script>
+
+<style scoped>
+form {
+  padding-top: 30px;
+  width: 50%;
+  text-align: center;
+  margin: 0 auto;
+}
+
+button {
+  margin-top: 20px;
+}
+
+input {
+  text-align: center;
+}
+</style>

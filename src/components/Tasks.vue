@@ -1,72 +1,159 @@
 <template>
-  <div class="post__container">
-    <div class="card">
-      <div class="card-body">
-        <h5 class="card-title">Task</h5>
-        <p class="card-text"></p>
-        <p><span>Task: </span>{{taskId}}</p>
-        <p><span>Task: </span>{{description}}</p>
-        <p><span>Author: </span>{{author}}</p>
-    <button type="button" class="btn btn-success" @click="complete" >Complete task</button>
-    <button type="button" class="btn btn-success" @click="edit" >Update</button>
-    <button type="button" class="btn btn btn-danger" @click="delet" >Delete</button>
-    
-    <div v-if="status" class="progress">
-  <div class="progress-bar bg-success" role="progressbar" style="width: 100%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
-</div>
-  </div>
 
-  </div>
+<div id="app">
+    <div class="container col-12">
+      <div class="row">
+        <div class="col-8">
+          <div v-if="loading">
+            <p>Loading</p>
+          </div>
+          <div v-else class="col-12">
+            <task
+              style="margin:4px;"
+              v-for="item in even(items)"
+              :key="item._id"
+              :description="item.description"
+              :author="item.author"
+              :createdAt="item.createdAt"
+              :taskId="item.taskId"
+              :status="item.status"
+              @edit="edit"
+              @delet="delet"
+            ></task>
+          </div>
+        </div>
+        <div class="col-4">
+          <task-form
+            :taskUpdate="replaceEdit(taskUpdate)"
+            :taskId="taskId"
+            @save="create"
+            @update="update"
+          ></task-form>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
+
+import Task from "./Task";
+import TaskForm from "./TaskForm";
 export default {
   name: 'tasks',
-  props: {
-    taskId: {
-      type: String,
-      required: true
-    },
-    description: {
-      type: String,
-    },
-    author: {
-      type: String,
-      required: true
-    },
-    status: {
-      type: Boolean
-    },
-    createdAt: {
-      type: String,
-    },
+    components: {
+    task: Task,
+    "task-form": TaskForm
+  },
+   data() {
+    return {
+      loading: true,
+      items: [],
+      taskId: "",
+      taskUpdate: {
+        taskId: "",
+        description: "",
+        authorId: "",
+        status: false
+      }
+    };
+  },
+  created(){
+      this.showTasks();
   },
   methods: {
-    edit() {
-      this.$emit("edit", {
-        taskId: this.taskId,
-        description: this.description,
-        author: this.author,
-        status: this.status,
-        createdAt: this.createdAt
+
+    showTasks(){
+           fetch('http://localhost:3000/api/tasks')
+      .then((response) => {
+        return response.json();
+      })
+      .then((data) => {
+        const { items = [] } = data;
+        const tasks = items.map((item) => {
+          const { userId = {} } = item;
+          console.log(item);
+          const { firstname = '', lastname = '' } = userId;
+          return {
+            taskId: item._id,
+            description: item.description,         
+            author: `${item.author.firstname} ${item.author.lastname}`,
+            status: item.status,
+            createdAt: item.createdAt     
+          }
+        });
+        this.items = tasks;
+        console.log(this.items);
+        this.loading = false;
       });
     },
-    delet() {
-      this.$emit("delet", {
-        taskId: this.taskId
+ create(tasks) {
+      console.log(tasks);
+              console.log("#########");
+        console.log(JSON.stringify(tasks));
+      fetch('http://localhost:3000/api/tasks', {
+        method: "POST",
+        body: JSON.stringify(tasks),
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+        .then(response => {
+          return response.json();
+        })
+        .then(data => {
+          this.showTasks();
+        });
+    },
+    update(tasks) {
+      fetch('http://localhost:3000/api/tasks/'+ tasks.id, {
+        method: "PUT",
+        body: JSON.stringify(tasks),
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+        .then(response => {
+          return response.json();
+        })
+        .then(data => {
+          this.showTasks();
+        });
+    },
+    edit(tasks) {
+      this.taskUpdate = {
+        taskId: tasks.taskId,
+        authorId: tasks.authorId,
+        description: tasks.description,
+        status: tasks.status,
+        createdAt: tasks.createdAt
+      };
+    },
+    delet(tasks) {
+      fetch('http://localhost:3000/api/tasks/'+ tasks.taskId, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+        .then(response => {
+          return response.json();
+        })
+        .then(data => {
+          var index = this.items.indexOf(data);
+          this.showTasks();
+        });
+    },
+    even: function(items) {
+      return items.slice().sort(function(a, b) {
+        return new Date(b.createdAt) - new Date(a.createdAt);
       });
     },
-    complete(){
-        his.$emit("complete", {
-        taskId: this.taskId,
-        description: this.description,
-        author: this.author,
-        status: true
-    });
+    replaceEdit: function(tasksUpdate) {
+      return tasksUpdate;
     }
-}
-}
+  }
+};
 </script>
 
 <style>
